@@ -176,16 +176,24 @@
             <div class="report-item" id="report-details"></div>
         </div>
         
-        <button class="btn" id="submit-score-btn" onclick="uploadScore()">登記成績至 Google 試算表</button>
+        <button class="btn" id="submit-score-btn" onclick="uploadScore()">登記成績至 Google Form</button>
         <button class="btn" id="retry-wrong-btn" style="margin-top: 10px; background: #e67e22; display: none;" onclick="startRetryMode()">重新挑戰（僅答錯題目）</button>
-        <a id="google-form-link" class="link-btn" href="https://docs.google.com/forms/" target="_blank">填寫課堂 Google Form 問卷</a>
+        <a id="google-form-link" class="link-btn" href="https://docs.google.com/forms/d/e/1FAIpQLSc5aHjzFusS5URNRUzWUSnuKbwW4gYU71mDkgQfeT7_1vVEBg/viewform" target="_blank">查看 Google Form 連結</a>
         <p id="upload-status" style="text-align: center; margin-top: 10px; font-weight: bold;"></p>
     </div>
 </div>
 
 <script>
-// 已填入已部署的 Web App URL
-const WEB_APP_URL = "https://script.google.com/a/macros/lpsmc.edu.hk/s/AKfycbzfrz-I2PYi9q2PGhiXHkkXVqM6JyiQBASJfTfx8S6WTRD9YqoLPyoTTNLdtb91kKTElQ/exec"; 
+// 已替換為你的 Google Form 送出 API
+const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/e/1FAIpQLSc5aHjzFusS5URNRUzWUSnuKbwW4gYU71mDkgQfeT7_1vVEBg/formResponse"; 
+
+// 填入解析出來的對應欄位 entry ID
+const FORM_ENTRIES = {
+    class: "entry.1196889463",   // 班別
+    no: "entry.1639097647",      // 學號
+    name: "entry.584729158",     // 姓名
+    score: "entry.1270724039"    // 成績欄位
+};
 
 let player = { classStr: '', noStr: '', nameStr: '' };
 let comboCount = 0, currentIdx = 0, totalScore = 0, hp = 5;
@@ -438,58 +446,31 @@ function startRetryMode() {
     showQuestion();
 }
 
-function uploadScore() {
-    const btn = document.getElementById('submit-score-btn');
-    btn.disabled = true; document.getElementById('upload-status').innerText = "提交中...";
-
-    fetch(WEB_APP_URL, {
-        method: 'POST', mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: `${player.classStr} (${player.noStr}) ${player.nameStr}`, score: totalScore })
-    }).then(() => {
-        document.getElementById('upload-status').innerText = "✅ 成績已成功登記至 Google 試算表！";
-        btn.style.display = 'none';
-    }).catch(() => {
-        document.getElementById('upload-status').innerText = "❌ 提交失敗，請檢查網絡。";
-        btn.disabled = false;
-    });
-}
-// 1. 替換為你的 Google Form 提交網址 (結尾必須是 /formResponse)
-const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/e/你的表單ID/formResponse"; 
-
-// 2. 填入步驟 1 取得的 entry ID
-const FORM_ENTRIES = {
-    class: "entry.123456789",   // 班別欄位 ID
-    no: "entry.987654321",      // 學號欄位 ID
-    name: "entry.112233445",    // 姓名欄位 ID
-    score: "entry.556677889"    // 得分欄位 ID
-};
-
+// 修正後的 Google Form 上傳函數
 function uploadScore() {
     const btn = document.getElementById('submit-score-btn');
     btn.disabled = true; 
     document.getElementById('upload-status').innerText = "提交中...";
 
-    // 組成 FormData 格式
     const formData = new FormData();
     formData.append(FORM_ENTRIES.class, player.classStr);
     formData.append(FORM_ENTRIES.no, player.noStr);
     formData.append(FORM_ENTRIES.name, player.nameStr);
     formData.append(FORM_ENTRIES.score, totalScore);
 
-    // 發送 POST 請求至 Google Form
     fetch(GOOGLE_FORM_ACTION_URL, {
         method: 'POST',
-        mode: 'no-cors', // 避開 Google Forms 的跨網域 (CORS) 限制
+        mode: 'no-cors',
         body: formData
     }).then(() => {
         document.getElementById('upload-status').innerText = "✅ 成績已成功自動登錄至 Google Form！";
         btn.style.display = 'none';
     }).catch((error) => {
         console.error('Error:', error);
-        document.getElementById('upload-status').innerText = "❌ 提交失敗，請檢查網路連線。";
+        document.getElementById('upload-status').innerText = "❌ 提交失敗，請檢查網絡連線。";
         btn.disabled = false;
     });
 }
+</script>
 </body>
 </html>
