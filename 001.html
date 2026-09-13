@@ -454,6 +454,42 @@ function uploadScore() {
         btn.disabled = false;
     });
 }
-</script>
+// 1. 替換為你的 Google Form 提交網址 (結尾必須是 /formResponse)
+const GOOGLE_FORM_ACTION_URL = "https://docs.google.com/forms/d/e/你的表單ID/formResponse"; 
+
+// 2. 填入步驟 1 取得的 entry ID
+const FORM_ENTRIES = {
+    class: "entry.123456789",   // 班別欄位 ID
+    no: "entry.987654321",      // 學號欄位 ID
+    name: "entry.112233445",    // 姓名欄位 ID
+    score: "entry.556677889"    // 得分欄位 ID
+};
+
+function uploadScore() {
+    const btn = document.getElementById('submit-score-btn');
+    btn.disabled = true; 
+    document.getElementById('upload-status').innerText = "提交中...";
+
+    // 組成 FormData 格式
+    const formData = new FormData();
+    formData.append(FORM_ENTRIES.class, player.classStr);
+    formData.append(FORM_ENTRIES.no, player.noStr);
+    formData.append(FORM_ENTRIES.name, player.nameStr);
+    formData.append(FORM_ENTRIES.score, totalScore);
+
+    // 發送 POST 請求至 Google Form
+    fetch(GOOGLE_FORM_ACTION_URL, {
+        method: 'POST',
+        mode: 'no-cors', // 避開 Google Forms 的跨網域 (CORS) 限制
+        body: formData
+    }).then(() => {
+        document.getElementById('upload-status').innerText = "✅ 成績已成功自動登錄至 Google Form！";
+        btn.style.display = 'none';
+    }).catch((error) => {
+        console.error('Error:', error);
+        document.getElementById('upload-status').innerText = "❌ 提交失敗，請檢查網路連線。";
+        btn.disabled = false;
+    });
+}
 </body>
 </html>
